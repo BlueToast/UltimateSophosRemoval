@@ -422,6 +422,7 @@ exit /b 0
 
 
 :Deletion
+call :proxytwo ScheduledTasks_Deletion
 call :proxytwo Registry_Deletion
 call :proxytwo Filesystem_Deletion
 exit /b 0
@@ -1378,8 +1379,19 @@ exit /b 0
 
 
 
+:ScheduledTasks_Deletion
+schtasks /delete /F /TN "AdwarePUAScan"
+schtasks /delete /F /TN "RootkitScan"
+schtasks /delete /F /TN "Sophos_InstTask"
+exit /b 0
+
+
+
 :Registry_Deletion
 :: The next step is to delete all Sophos registry keys and values
+
+:: BootExecute
+(reg query "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager" /v "BootExecute" | find "Sophos")>nul && (reg add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager" /v "BootExecute" /t "REG_MULTI_SZ" /d "autocheck autochk *" /f)
 
 :: Autoruns
 reg delete "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Run" /v "Sophos UI.exe" /f
@@ -1396,7 +1408,7 @@ reg delete "HKLM\SOFTWARE\Classes\Folder\shellex\ContextMenuHandlers\SavShellExt
 
 :: We are flagging some miscellaneous files for deletion on boot due to their extra stubbornness for clinging on to the system
 if not exist "%~dp0Register-FileToDelete.ps1" (call :PoShScript&if not exist "%~dp0Register-FileToDelete.ps1" (echo Failed to create Register-FileToDelete.ps1 script) else (echo Successfully created Register-FileToDelete.ps1 script&echo Executing Register-FileToDelete.ps1 script)) else (echo Executing Register-FileToDelete.ps1 script)
-if exist "%~dp0Register-FileToDelete.ps1" ((powershell -NoProfile -ExecutionPolicy Bypass -Command "Import-Module '%~dp0Register-FileToDelete.ps1';Register-FileToDelete -Source 'C:\Program Files (x86)\Sophos\Sophos Anti-Virus\sophos_detoured.dll';Register-FileToDelete -Source 'C:\Program Files (x86)\Sophos\Sophos Anti-Virus\sophos_detoured_x64.dll';Register-FileToDelete -Source 'C:\Program Files (x86)\Sophos\Sophos Anti-Virus\sophos_detoured.dll';Register-FileToDelete -Source 'C:\Program Files\Sophos\Sophos Anti-Virus\sophos_detoured_x64.dll';Register-FileToDelete -Source 'C:\Program Files\Sophos\Sophos Anti-Virus\sophos_detoured.dll';Register-FileToDelete -Source 'C:\ProgramData\Sophos\Web Intelligence\swi_ifslsp.dll';Register-FileToDelete -Source 'C:\ProgramData\Sophos\Web Intelligence\swi_ifslsp_64.dll';Register-FileToDelete -Source 'C:\ProgramData\Sophos';Register-FileToDelete -Source 'C:\Program Files\Sophos';Register-FileToDelete -Source 'C:\Program Files (x86)\Sophos';Register-FileToDelete -Source 'C:\Program Files\Common Files\Sophos';Register-FileToDelete -Source 'C:\Program Files (x86)\Common Files\Sophos';Register-FileToDelete -Source 'C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Sophos';Get-ChildItem -Recurse 'C:\Program Files (x86)\Common Files\Sophos' | ForEach-Object {Register-FileToDelete -Source $_.FullName};Get-ChildItem -Recurse 'C:\Program Files (x86)\Sophos' | ForEach-Object {Register-FileToDelete -Source $_.FullName};Get-ChildItem -Recurse 'C:\Program Files\Common Files\Sophos' | ForEach-Object {Register-FileToDelete -Source $_.FullName};Get-ChildItem -Recurse 'C:\Program Files\Sophos' | ForEach-Object {Register-FileToDelete -Source $_.FullName};") 2> nul&echo Register-FileToDelete.ps1 script executed&(del /Q /S "%~dp0Register-FileToDelete.ps1")>nul 2>&1) else (echo Failed to execute Register-FileToDelete.ps1 script&(del /Q /S "%~dp0Register-FileToDelete.ps1")>nul 2>&1)
+if exist "%~dp0Register-FileToDelete.ps1" ((powershell -NoProfile -ExecutionPolicy Bypass -Command "Import-Module '%~dp0Register-FileToDelete.ps1';Register-FileToDelete -Source 'C:\Program Files (x86)\Sophos\Sophos Anti-Virus\sophos_detoured.dll';Register-FileToDelete -Source 'C:\Program Files (x86)\Sophos\Sophos Anti-Virus\sophos_detoured_x64.dll';Register-FileToDelete -Source 'C:\Program Files (x86)\Sophos\Sophos Anti-Virus\sophos_detoured.dll';Register-FileToDelete -Source 'C:\Program Files\Sophos\Sophos Anti-Virus\sophos_detoured_x64.dll';Register-FileToDelete -Source 'C:\Program Files\Sophos\Sophos Anti-Virus\sophos_detoured.dll';Register-FileToDelete -Source 'C:\ProgramData\Sophos\Web Intelligence\swi_ifslsp.dll';Register-FileToDelete -Source 'C:\ProgramData\Sophos\Web Intelligence\swi_ifslsp_64.dll';Register-FileToDelete -Source 'C:\SophosBootTasks.txt';Register-FileToDelete -Source 'C:\ProgramData\Sophos\AutoUpdate\Cache\sophos_autoupdate1.dir\SophosUpdate.exe';Register-FileToDelete -Source 'C:\ProgramData\Sophos';Register-FileToDelete -Source 'C:\Program Files\Sophos';Register-FileToDelete -Source 'C:\Program Files (x86)\Sophos';Register-FileToDelete -Source 'C:\Program Files\Common Files\Sophos';Register-FileToDelete -Source 'C:\Program Files (x86)\Common Files\Sophos';Register-FileToDelete -Source 'C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Sophos';Get-ChildItem -Recurse 'C:\Program Files (x86)\Common Files\Sophos' | ForEach-Object {Register-FileToDelete -Source $_.FullName};Get-ChildItem -Recurse 'C:\Program Files (x86)\Sophos' | ForEach-Object {Register-FileToDelete -Source $_.FullName};Get-ChildItem -Recurse 'C:\Program Files\Common Files\Sophos' | ForEach-Object {Register-FileToDelete -Source $_.FullName};Get-ChildItem -Recurse 'C:\Program Files\Sophos' | ForEach-Object {Register-FileToDelete -Source $_.FullName};") 2> nul&echo Register-FileToDelete.ps1 script executed&(del /Q /S "%~dp0Register-FileToDelete.ps1")>nul 2>&1) else (echo Failed to execute Register-FileToDelete.ps1 script&(del /Q /S "%~dp0Register-FileToDelete.ps1")>nul 2>&1)
 
 :: Others
 reg delete "HKCU\SOFTWARE\Sophos" /f
@@ -1412,6 +1424,42 @@ for /f "tokens=1 delims=*" %%a in ('net localgroup ^| find "Sophos"') do @(net l
 :: As undesirable it may be to touch the AppInit_DLLs registry value, we have to because it presents a security risk to the system by leaving Sophos in the registry data of this registry value. We will make a registry key backup and save it to "C:\Windows\Temp\AppInitDLLs_*.reg" before making modifications.
 :: Microsoft does not recommend that vendors use this registry value (https://support.microsoft.com/en-us/help/197571/working-with-the-appinit-dlls-registry-value)
 (reg query "HKLM\SOFTWARE\WOW6432Node\Microsoft\Windows NT\CurrentVersion\Windows" /v AppInit_DLLs | find /I "Sophos")>nul&&(call :AppInit_DLLs_x86)||((reg query "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Windows" /v AppInit_DLLs | find /I "Sophos")>nul&&(call :AppInit_DLLs_x64)||(echo AppInit_DLLs is clean))
+
+wmic /failfast:on product where "name like '%%Sophos%%'" call uninstall /nointeractive && shutdown /a
+wmic product where "name like '%%Sophos%%'" call uninstall
+
+for /f "tokens=*" %%a in ('reg query "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall" /s /f "Sophos" ^| find "HKEY_LOCAL_MACHINE"') do @(reg delete "%%~a" /f)
+for /f "tokens=*" %%a in ('reg query "HKLM\SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall" /s /f "Sophos" ^| find "HKEY_LOCAL_MACHINE"') do @(reg delete "%%~a" /f)
+
+for /f "tokens=6 delims=\" %%a in ('reg query "HKLM\SOFTWARE\Microsoft\MATS\WindowsInstaller" /s /f "Sophos" ^| find "HKEY_LOCAL_MACHINE"') do @(msiexec /X "%%~a" /qn /norestart REBOOT=REALLYSUPPRESS)
+for /f "tokens=7 delims=\" %%a in ('reg query "HKLM\SOFTWARE\Wow6432Node\Microsoft\MATS\WindowsInstaller" /s /f "Sophos" ^| find "HKEY_LOCAL_MACHINE"') do @(msiexec /X "%%~a" /qn /norestart REBOOT=REALLYSUPPRESS)
+
+:: Largely untested
+::for /f "tokens=6 delims=\" %a in ('reg query "HKLM\SOFTWARE\Microsoft\MATS\WindowsInstaller" /s /f "Sophos" ^| find "HKEY_LOCAL_MACHINE"') do @(reg delete "HKLM\SOFTWARE\Microsoft\MATS\WindowsInstaller\%~a" /f)
+::for /f "tokens=7 delims=\" %a in ('reg query "HKLM\SOFTWARE\Wow6432Node\Microsoft\MATS\WindowsInstaller" /s /f "Sophos" ^| find "HKEY_LOCAL_MACHINE"') do @(reg delete "HKLM\SOFTWARE\Wow6432Node\Microsoft\MATS\WindowsInstaller\%~a" /f)
+
+:: Largely untested
+::for /f "tokens=*" %a in ('reg query "HKLM\SOFTWARE\Classes" ^| find "Sophos"') do @(reg delete "%~a" /f)
+::for /f "tokens=*" %a in ('reg query "HKLM\SOFTWARE\Classes\AppID" /s /f "Sophos" ^| find "HKEY_LOCAL_MACHINE"') do @(reg delete "%~a" /f)
+::for /f "tokens=*" %a in ('reg query "HKLM\SOFTWARE\Classes\Wow6432Node\AppID" /s /f "Sophos" ^| find "HKEY_LOCAL_MACHINE"') do @(reg delete "%~a" /f)
+::for /f "tokens=5 delims=\" %a in ('reg query "HKLM\SOFTWARE\Classes\CLSID" /s /f "Sophos" ^| find "HKEY_LOCAL_MACHINE"') do @(reg delete "HKLM\SOFTWARE\Classes\CLSID\%~a" /f)
+::for /f "tokens=6 delims=\" %a in ('reg query "HKLM\SOFTWARE\Classes\Wow6432Node\CLSID" /s /f "Sophos" ^| find "HKEY_LOCAL_MACHINE"') do @(reg delete "HKLM\SOFTWARE\Classes\Wow6432Node\CLSID\%~a" /f)
+::for /f "tokens=5 delims=\" %a in ('reg query "HKLM\SOFTWARE\Classes\Interface" /s /f "Sophos" ^| find "HKEY_LOCAL_MACHINE"') do @(reg delete "HKLM\SOFTWARE\Classes\Interface\%~a" /f)
+::for /f "tokens=6 delims=\" %a in ('reg query "HKLM\SOFTWARE\Classes\Wow6432Node\Interface" /s /f "Sophos" ^| find "HKEY_LOCAL_MACHINE"') do @(reg delete "HKLM\SOFTWARE\Classes\Wow6432Node\Interface\%~a" /f)
+::for /f "tokens=5 delims=\" %a in ('reg query "HKLM\SOFTWARE\Classes\TypeLib" /s /f "Sophos" ^| find "HKEY_LOCAL_MACHINE"') do @(reg delete "HKLM\SOFTWARE\Classes\TypeLib\%~a" /f)
+::for /f "tokens=6 delims=\" %a in ('reg query "HKLM\SOFTWARE\Classes\Wow6432Node\TypeLib" /s /f "Sophos" ^| find "HKEY_LOCAL_MACHINE"') do @(reg delete "HKLM\SOFTWARE\Classes\Wow6432Node\TypeLib\%~a" /f)
+::for /f "tokens=*" %a in ('reg query "HKLM\SOFTWARE\LabTech\Service\DeviceLibrary" /s /f "Sophos" ^| find "HKEY_LOCAL_MACHINE"') do @(reg delete "%~a" /f)
+::for /f "tokens=*" %a in ('reg query "HKLM\SOFTWARE\LabTech\Service\VirusScanners" /s /f "Sophos" ^| find "HKEY_LOCAL_MACHINE"') do @(reg delete "%~a" /f)
+::for /f "tokens=*" %a in ('reg query "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components" /s /f "Sophos" ^| find "HKEY_LOCAL_MACHINE"') do @(reg delete "%~a" /f)
+
+:: I haven't figured out a good way to just delete registry values that are stored with a name that is a full path
+:: Registry values exist at "HKLM\SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\SharedDLLs: Name <full path to DLL/EXE> + Type REG_DWORD + Data 1
+:: Registry values exist at "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\Folders: Name <full path ending with \> + Type REG_SZ + Data 1 (sometimes)
+
+:: Largely untested
+::reg delete "HKLM\SOFTWARE\Microsoft\Security Center\Monitoring\SophosAntivirus" /f
+::reg delete "HKLM\SOFTWARE\Wow6432Node\Microsoft\Security Center\Monitoring\SophosAntivirus" /f
+
 exit /b 0
 
 
