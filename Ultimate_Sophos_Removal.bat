@@ -1418,7 +1418,9 @@ reg delete "HKLM\SOFTWARE\Wow6432Node\Sophos" /f
 for /f "tokens=*" %%a in ('reg query HKU') do @(reg delete "HKU\%%~a\SOFTWARE\Sophos" /f)
 for /f "tokens=*" %%a in ('reg query HKU') do @(reg delete "HKU\%%~a\SOFTWARE\Wow6432Node\Sophos" /f)
 for /f "tokens=*" %%a in ('reg query "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall" ^| find "Sophos"') do @(reg delete "%%~a" /f)
+for /f "tokens=*" %%a in ('reg query "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall" /s /f "Sophos" ^| find "HKEY_LOCAL_MACHINE"') do @(reg delete "%%~a" /f)
 for /f "tokens=*" %%a in ('reg query "HKLM\SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall" ^| find "Sophos"') do @(reg delete "%%~a" /f)
+for /f "tokens=*" %%a in ('reg query "HKLM\SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall" /s /f "Sophos" ^| find "HKEY_LOCAL_MACHINE"') do @(reg delete "%%~a" /f)
 for /f "tokens=1 delims=*" %%a in ('net localgroup ^| find "Sophos"') do @(net localgroup "%%~a" /DELETE)2> nul
 
 :: As undesirable it may be to touch the AppInit_DLLs registry value, we have to because it presents a security risk to the system by leaving Sophos in the registry data of this registry value. We will make a registry key backup and save it to "C:\Windows\Temp\AppInitDLLs_*.reg" before making modifications.
@@ -1428,9 +1430,6 @@ for /f "tokens=1 delims=*" %%a in ('net localgroup ^| find "Sophos"') do @(net l
 wmic /failfast:on product where "name like '%%Sophos%%'" call uninstall /nointeractive && shutdown /a
 wmic product where "name like '%%Sophos%%'" call uninstall
 
-for /f "tokens=*" %%a in ('reg query "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall" /s /f "Sophos" ^| find "HKEY_LOCAL_MACHINE"') do @(reg delete "%%~a" /f)
-for /f "tokens=*" %%a in ('reg query "HKLM\SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall" /s /f "Sophos" ^| find "HKEY_LOCAL_MACHINE"') do @(reg delete "%%~a" /f)
-
 for /f "tokens=6 delims=\" %%a in ('reg query "HKLM\SOFTWARE\Microsoft\MATS\WindowsInstaller" /s /f "Sophos" ^| find "HKEY_LOCAL_MACHINE"') do @(msiexec /X "%%~a" /qn /norestart REBOOT=REALLYSUPPRESS)
 for /f "tokens=7 delims=\" %%a in ('reg query "HKLM\SOFTWARE\Wow6432Node\Microsoft\MATS\WindowsInstaller" /s /f "Sophos" ^| find "HKEY_LOCAL_MACHINE"') do @(msiexec /X "%%~a" /qn /norestart REBOOT=REALLYSUPPRESS)
 
@@ -1438,23 +1437,34 @@ for /f "tokens=7 delims=\" %%a in ('reg query "HKLM\SOFTWARE\Wow6432Node\Microso
 ::for /f "tokens=6 delims=\" %a in ('reg query "HKLM\SOFTWARE\Microsoft\MATS\WindowsInstaller" /s /f "Sophos" ^| find "HKEY_LOCAL_MACHINE"') do @(reg delete "HKLM\SOFTWARE\Microsoft\MATS\WindowsInstaller\%~a" /f)
 ::for /f "tokens=7 delims=\" %a in ('reg query "HKLM\SOFTWARE\Wow6432Node\Microsoft\MATS\WindowsInstaller" /s /f "Sophos" ^| find "HKEY_LOCAL_MACHINE"') do @(reg delete "HKLM\SOFTWARE\Wow6432Node\Microsoft\MATS\WindowsInstaller\%~a" /f)
 
-:: Largely untested
-::for /f "tokens=*" %a in ('reg query "HKLM\SOFTWARE\Classes" ^| find "Sophos"') do @(reg delete "%~a" /f)
-::for /f "tokens=*" %a in ('reg query "HKLM\SOFTWARE\Classes\AppID" /s /f "Sophos" ^| find "HKEY_LOCAL_MACHINE"') do @(reg delete "%~a" /f)
-::for /f "tokens=*" %a in ('reg query "HKLM\SOFTWARE\Classes\Wow6432Node\AppID" /s /f "Sophos" ^| find "HKEY_LOCAL_MACHINE"') do @(reg delete "%~a" /f)
-::for /f "tokens=5 delims=\" %a in ('reg query "HKLM\SOFTWARE\Classes\CLSID" /s /f "Sophos" ^| find "HKEY_LOCAL_MACHINE"') do @(reg delete "HKLM\SOFTWARE\Classes\CLSID\%~a" /f)
-::for /f "tokens=6 delims=\" %a in ('reg query "HKLM\SOFTWARE\Classes\Wow6432Node\CLSID" /s /f "Sophos" ^| find "HKEY_LOCAL_MACHINE"') do @(reg delete "HKLM\SOFTWARE\Classes\Wow6432Node\CLSID\%~a" /f)
-::for /f "tokens=5 delims=\" %a in ('reg query "HKLM\SOFTWARE\Classes\Interface" /s /f "Sophos" ^| find "HKEY_LOCAL_MACHINE"') do @(reg delete "HKLM\SOFTWARE\Classes\Interface\%~a" /f)
-::for /f "tokens=6 delims=\" %a in ('reg query "HKLM\SOFTWARE\Classes\Wow6432Node\Interface" /s /f "Sophos" ^| find "HKEY_LOCAL_MACHINE"') do @(reg delete "HKLM\SOFTWARE\Classes\Wow6432Node\Interface\%~a" /f)
-::for /f "tokens=5 delims=\" %a in ('reg query "HKLM\SOFTWARE\Classes\TypeLib" /s /f "Sophos" ^| find "HKEY_LOCAL_MACHINE"') do @(reg delete "HKLM\SOFTWARE\Classes\TypeLib\%~a" /f)
-::for /f "tokens=6 delims=\" %a in ('reg query "HKLM\SOFTWARE\Classes\Wow6432Node\TypeLib" /s /f "Sophos" ^| find "HKEY_LOCAL_MACHINE"') do @(reg delete "HKLM\SOFTWARE\Classes\Wow6432Node\TypeLib\%~a" /f)
-::for /f "tokens=*" %a in ('reg query "HKLM\SOFTWARE\LabTech\Service\DeviceLibrary" /s /f "Sophos" ^| find "HKEY_LOCAL_MACHINE"') do @(reg delete "%~a" /f)
-::for /f "tokens=*" %a in ('reg query "HKLM\SOFTWARE\LabTech\Service\VirusScanners" /s /f "Sophos" ^| find "HKEY_LOCAL_MACHINE"') do @(reg delete "%~a" /f)
-::for /f "tokens=*" %a in ('reg query "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components" /s /f "Sophos" ^| find "HKEY_LOCAL_MACHINE"') do @(reg delete "%~a" /f)
+:: Tested
+for /f "tokens=6 delims=\" %%a in ('reg query "HKLM\SOFTWARE\Classes\Installer\Products" /s /f "Sophos" ^| find "HKEY_LOCAL_MACHINE"') do @(reg delete "HKLM\SOFTWARE\Classes\Installer\Products\%%~a" /f)
+for /f "tokens=7 delims=\" %%a in ('reg query "HKLM\SOFTWARE\Classes\Wow6432Node\Installer\Products" /s /f "Sophos" ^| find "HKEY_LOCAL_MACHINE"') do @(reg delete "HKLM\SOFTWARE\Classes\Wow6432Node\Installer\Products\%%~a" /f)
 
-:: I haven't figured out a good way to just delete registry values that are stored with a name that is a full path
-:: Registry values exist at "HKLM\SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\SharedDLLs: Name <full path to DLL/EXE> + Type REG_DWORD + Data 1
-:: Registry values exist at "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\Folders: Name <full path ending with \> + Type REG_SZ + Data 1 (sometimes)
+for /f "tokens=5 delims=\" %%a in ('reg query "HKLM\SOFTWARE\Classes\TypeLib" /s /f "Sophos" ^| find "HKEY_LOCAL_MACHINE"') do @(reg delete "HKLM\SOFTWARE\Classes\TypeLib\%%~a" /f)
+for /f "tokens=6 delims=\" %%a in ('reg query "HKLM\SOFTWARE\Classes\Wow6432Node\TypeLib" /s /f "Sophos" ^| find "HKEY_LOCAL_MACHINE"') do @(reg delete "HKLM\SOFTWARE\Classes\Wow6432Node\TypeLib\%%~a" /f)
+
+for /f "tokens=5 delims=\" %%a in ('reg query "HKLM\SOFTWARE\Classes\CLSID" /s /f "Sophos" ^| find "HKEY_LOCAL_MACHINE"') do @(reg delete "HKLM\SOFTWARE\Classes\CLSID\%%~a" /f)
+for /f "tokens=6 delims=\" %%a in ('reg query "HKLM\SOFTWARE\Classes\Wow6432Node\CLSID" /s /f "Sophos" ^| find "HKEY_LOCAL_MACHINE"') do @(reg delete "HKLM\SOFTWARE\Classes\Wow6432Node\CLSID\%%~a" /f)
+
+for /f "tokens=5 delims=\" %%a in ('reg query "HKLM\SOFTWARE\Classes\Interface" /s /f "Sophos" ^| find "HKEY_LOCAL_MACHINE"') do @(reg delete "HKLM\SOFTWARE\Classes\Interface\%%~a" /f)
+for /f "tokens=6 delims=\" %%a in ('reg query "HKLM\SOFTWARE\Classes\Wow6432Node\Interface" /s /f "Sophos" ^| find "HKEY_LOCAL_MACHINE"') do @(reg delete "HKLM\SOFTWARE\Classes\Wow6432Node\Interface\%%~a" /f)
+
+for /f "tokens=5 delims=\" %%a in ('reg query "HKLM\SOFTWARE\Classes\AppID" /s /f "Sophos" ^| find "HKEY_LOCAL_MACHINE"') do @(reg delete "HKLM\SOFTWARE\Classes\AppID\%%~a" /f)
+for /f "tokens=6 delims=\" %%a in ('reg query "HKLM\SOFTWARE\Classes\Wow6432Node\AppID" /s /f "Sophos" ^| find "HKEY_LOCAL_MACHINE"') do @(reg delete "HKLM\SOFTWARE\Classes\Wow6432Node\AppID\%%~a" /f)
+
+for /f "tokens=4 delims=\" %%a in ('reg query "HKLM\SOFTWARE\Classes" /s /f "Sophos" ^| find "HKEY_LOCAL_MACHINE" ^| findstr /V "\CLSID \AppID \Installer \TypeLib \Interface"') do @(reg delete "HKLM\SOFTWARE\Classes\%%~a" /f)
+
+for /f "tokens=8 delims=\" %%a in ('reg query "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData"') do @(for /f "tokens=10 delims=\" %%b in ('reg query "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\%%~a\Components" /s /f "Sophos" ^| find "HKEY_LOCAL_MACHINE"') do @(reg delete "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\%%~a\Components\%%~b" /f))
+for /f "tokens=8 delims=\" %%a in ('reg query "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData"') do @(for /f "tokens=10 delims=\" %%b in ('reg query "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\%%~a\Products" /s /f "Sophos" ^| find "HKEY_LOCAL_MACHINE"') do @(reg delete "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\%%~a\Products\%%~b" /f))
+
+for /f "tokens=*" %%a in ('reg query "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Custom" ^| findstr "agentapi.exe agentasst.exe AlMon.exe ALSvc.exe ALUpdate.exe AUTelem.exe autoupdateagentnt.exe BackgroundScanClient.exe CertificationManagerServiceNT.exe Clean.exe ClientMRInit.exe ConfigureSAV.exe emlibupdateagentnt.exe EXPTelem.exe FileAnalyzerSubmitterTool.exe ForceUpdateAlongSideSGN.exe GatherTelem.exe Health.exe Heartbeat.exe hmpalert.exe ManagementAgentNT.exe McsAgent.exe McsClient.exe MgntSvc.exe MMRot.exe PatchEndpointCommunicator.exe PatchEndpointOrchestrator.exe PatchServerCommunicator.exe PMContExtrSvc.exe PMEVizsla.exe PMScanner.exe RouterNT.exe Safestore.exe SafeStore32.exe SafeStore64.exe sav32cli.exe SAVAdminService.exe SAVCleanupService.exe SavexSrvc.exe SavexWebAgent.exe SavMain.exe SAVProgress.exe SavProxy.exe SAVService.exe SAVTelem.exe scfmanager.exe SCFService.exe SDCDevCon.exe SDCDevCon64.exe SDCDevConx64.exe SDCService.exe SDRService.exe sducli.exe sdugui.exe SEDcli.exe SEDService.exe setuphost.exe setupprep.exe SGN_MasterServicen.exe SLDService.exe SntpService.exe Sophos spa.exe ssp.exe SspEdr.exe SSPService.exe ssr32.exe ssr64.exe SubmitTelem.exe SUMService.exe swc_service.exe sweepnet.exe sweepupdate.exe swi_ UpdateCacheService.exe WSC_WSCClient.exe WSCClient.exe"') do @(reg delete "%%~a" /f)
+
+for /f "tokens=*" %%a in ('reg query "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options" ^| findstr "agentapi.exe agentasst.exe AlMon.exe ALSvc.exe ALUpdate.exe AUTelem.exe autoupdateagentnt.exe BackgroundScanClient.exe CertificationManagerServiceNT.exe Clean.exe ClientMRInit.exe ConfigureSAV.exe emlibupdateagentnt.exe EXPTelem.exe FileAnalyzerSubmitterTool.exe ForceUpdateAlongSideSGN.exe GatherTelem.exe Health.exe Heartbeat.exe hmpalert.exe ManagementAgentNT.exe McsAgent.exe McsClient.exe MgntSvc.exe MMRot.exe PatchEndpointCommunicator.exe PatchEndpointOrchestrator.exe PatchServerCommunicator.exe PMContExtrSvc.exe PMEVizsla.exe PMScanner.exe RouterNT.exe Safestore.exe SafeStore32.exe SafeStore64.exe sav32cli.exe SAVAdminService.exe SAVCleanupService.exe SavexSrvc.exe SavexWebAgent.exe SavMain.exe SAVProgress.exe SavProxy.exe SAVService.exe SAVTelem.exe scfmanager.exe SCFService.exe SDCDevCon.exe SDCDevCon64.exe SDCDevConx64.exe SDCService.exe SDRService.exe sducli.exe sdugui.exe SEDcli.exe SEDService.exe setuphost.exe setupprep.exe SGN_MasterServicen.exe SLDService.exe SntpService.exe Sophos spa.exe ssp.exe SspEdr.exe SSPService.exe ssr32.exe ssr64.exe SubmitTelem.exe SUMService.exe swc_service.exe sweepnet.exe sweepupdate.exe swi_ UpdateCacheService.exe WSC_WSCClient.exe WSCClient.exe"') do @(reg delete "%%~a" /f)
+
+powershell -NoProfile -NoLogo -ExecutionPolicy Bypass "$keyPath = 'HKLM:\SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\SharedDLLs';$valueNames = (Get-Item -LiteralPath $keyPath).Property -like '*Sophos*';if ($valueNames) {Remove-ItemProperty -LiteralPath $keyPath -Name $valueNames}"
+
+powershell -NoProfile -NoLogo -ExecutionPolicy Bypass "$keyPath = 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\Folders';$valueNames = (Get-Item -LiteralPath $keyPath).Property -like '*Sophos*';if ($valueNames) {Remove-ItemProperty -LiteralPath $keyPath -Name $valueNames}"
 
 :: Largely untested
 ::reg delete "HKLM\SOFTWARE\Microsoft\Security Center\Monitoring\SophosAntivirus" /f
